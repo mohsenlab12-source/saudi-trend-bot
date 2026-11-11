@@ -55,8 +55,11 @@ def handle(m):
 def run_bot():
     while True:
         try:
+            print("Deleting webhook & starting polling...")
+            bot.delete_webhook(drop_pending_updates=True)
+            time.sleep(3)
             print("Polling started...")
-            bot.infinity_polling(timeout=60)
+            bot.infinity_polling(timeout=60, skip_pending=True)
         except Exception as e:
             print(f"Polling error: {e} - retry in 5s")
             time.sleep(5)
