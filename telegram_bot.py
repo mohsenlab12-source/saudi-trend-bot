@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import telebot
 
-BOT_TOKEN = "حط التوكن حقك هنا"
+BOT_TOKEN = 8722087403:AAFBImlnIxE5p_MjJrVxj5UHIzVFqG5lZ8g
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
