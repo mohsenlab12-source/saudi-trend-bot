@@ -1,62 +1,38 @@
-import os
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+import requests
+from bs4 import BeautifulSoup
+import telebot
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = "حط التوكن حقك هنا"
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = """
-🔥 بوت ترند السعودية 🔥
+bot = telebot.TeleBot(BOT_TOKEN)
 
-أهلاً بك!
+def get_trends():
+    try:
+        url = "https://getdaytrends.com/saudi-arabia/"
+        r = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        soup = BeautifulSoup(r.text, 'html.parser')
+        trends = soup.select('.trend-list a') or soup.select('td a')
+        msg = "🇸🇦 ترند السعودية الآن:\n\n"
+        for i, t in enumerate(trends[:15], 1):
+            msg += f"{i}. {t.text.strip()}\n"
+        return msg
+    except Exception as e:
+        return f"ما قدرت أجيب الترند الحين: {e}"
 
-الأوامر:
- /start - رسالة الترحيب
- /trend - جلب ترند السعودية الحالي
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, "🔥 أهلاً بك!\n\n/start - ترحيب\n/trend - ترند السعودية")
 
-البوت شغال 24/7 🚀
-"""
-    await update.message.reply_text(text)
+@bot.message_handler(commands=['trend'])
+def trend(message):
+    bot.reply_to(message, get_trends())
 
-    # بعد الترحيب جيب الترند تلقائياً
-    await trend(update, context)
+@bot.message_handler(func=lambda m: True)
+def any_msg(message):
+    if "ترند" in message.text:
+        bot.reply_to(message, get_trends())
+    else:
+        bot.reply_to(message, "اكتب /trend")
 
-async def trend(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    trends = """
-🇸🇦 ترند السعودية الآن:
-
-1. #همه_قد_الكلمه
-2. ضمان الحجز
-3. #شكرا_ابطال_الدفاع_الجوي
-4. #مسابقات همه
-5. #اليوم_العالمي_للعزاب
-6. #مرسول_يدلع_العزاب
-7. الدفاع الجوي
-8. صحراء الدهناء
-9. الضمان الذهبي
-10. جامعة القصيم
-11. محمد عمر
-12. النسخه العالميه
-13. علي الخارطه
-14. بدول مجلس التعاون
-15. الاجازات المرضيه
-16. زيدان
-17. اليوم الاربعاء
-18. خليج العقيه
-19. اليوم العالمي
-20. عروس الجنوب
-
-Source: GetDayTrends
-https://getdaytrends.com/saudi-arabia/
-"""
-    await update.message.reply_text(trends)
-
-def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("trend", trend))
-    print("Bot is running...")
-    app.run_polling()
-
-if __name__ == "__main__":
-    main()
+print("Bot is running...")
+bot.infinity_polling()
